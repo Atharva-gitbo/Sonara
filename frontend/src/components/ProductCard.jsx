@@ -20,7 +20,7 @@ export default function ProductCard({ product, onEdit, onDelete, isAdmin }) {
     if (!user) { navigate('/login'); return }
     setAdding(true)
     try {
-      await api.post('/cart', { product_id: product.id, quantity: 1 })
+      await api.post('/cart/', { product_id: product.id, quantity: 1 })
       setAdded(true)
       setTimeout(() => setAdded(false), ADDED_FEEDBACK_MS)
     } catch (err) {

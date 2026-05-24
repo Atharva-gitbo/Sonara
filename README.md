@@ -34,14 +34,14 @@ cd backend
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env            # then edit .env with your values
+cp .env.example .env            # fill in SECRET_KEY and ADMIN_PASSWORD before continuing
 python seed.py                  # seeds sample products + admin account
 uvicorn main:app --reload
 ```
 
 API runs at `http://localhost:8000`. Docs at `http://localhost:8000/docs`.
 
-> Admin credentials are set via `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env`.
+> **Required before running `seed.py`:** open `backend/.env` and set `SECRET_KEY` (any long random string) and `ADMIN_PASSWORD` (your chosen admin password). The admin login email defaults to `admin@sonara.com`.
 
 ### 2. Frontend
 
