@@ -1,4 +1,4 @@
-// Author: Kunj Vania
+// Authors: Kunj Vania, Atharva
 import { useState, useEffect } from 'react'
 import api from '../api/api'
 

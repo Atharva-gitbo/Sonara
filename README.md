@@ -132,4 +132,6 @@ mongoexport --db shopdb --collection cart --out cart.json
 
 | Member | Files |
 |--------|-------|
-| Kunj Vania | All files (individual submission) |
+| Kunj Vania | `backend/main.py`, `backend/database.py`, `backend/auth.py`, `backend/seed.py`, `backend/models/user.py`, `backend/models/product.py`, `backend/models/cart.py`, `backend/routers/users.py`, `backend/routers/products.py`, `backend/routers/cart.py`, `frontend/src/main.jsx`, `frontend/src/App.jsx`, `frontend/src/api/api.js`, `frontend/src/context/AuthContext.jsx`, `frontend/src/components/Navbar.jsx`, `frontend/src/components/ProtectedRoute.jsx`, `frontend/src/pages/Login.jsx`, `frontend/src/pages/Register.jsx`, `frontend/src/pages/Cart.jsx`, `frontend/src/pages/Profile.jsx` |
+| Atharva | `backend/routers/reverb.py`, `frontend/src/index.css`, `frontend/src/components/ProductCard.jsx` |
+| Kunj Vania & Atharva | `frontend/src/pages/Home.jsx` (Kunj: initial layout and search logic; Atharva: hero visuals and store styling), `frontend/src/pages/Admin.jsx` (Kunj: CRUD tables and user management; Atharva: Reverb import feature) |

@@ -1,4 +1,4 @@
-# Author: Kunj Vania
+# Author: Atharva
 import os
 import httpx
 from datetime import datetime

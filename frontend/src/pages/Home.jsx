@@ -1,4 +1,4 @@
-// Author: Kunj Vania
+// Authors: Kunj Vania, Atharva
 import { useState, useEffect, useCallback } from 'react'
 
 const SEARCH_DEBOUNCE_MS = 300
