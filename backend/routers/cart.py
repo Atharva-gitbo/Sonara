@@ -1,5 +1,6 @@
+# Author: Kunj Vania
 from fastapi import APIRouter, HTTPException, Depends
-from bson import ObjectId
+from bson import ObjectId, errors as bson_errors
 from datetime import datetime
 
 from database import get_db
@@ -7,6 +8,13 @@ from auth import get_current_user, require_admin
 from models.cart import CartItemAdd, CartItemUpdate, CartItemOut, CartSummary
 
 router = APIRouter(prefix="/api/cart", tags=["cart"])
+
+
+def _to_object_id(id_str: str) -> ObjectId:
+    try:
+        return ObjectId(id_str)
+    except (bson_errors.InvalidId, TypeError):
+        raise HTTPException(400, "Invalid ID format")
 
 
 # ── Admin (must be before /{item_id} to avoid route conflict) ─────────────────
@@ -35,7 +43,7 @@ async def _enrich_items(db, items: list) -> tuple[list[CartItemOut], float]:
     enriched = []
     total = 0.0
     for item in items:
-        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        product = await db.products.find_one({"_id": _to_object_id(item["product_id"])})
         if not product:
             continue
         subtotal = product["price"] * item["quantity"]
@@ -64,7 +72,7 @@ async def get_my_cart(current_user=Depends(get_current_user)):
 @router.post("/", response_model=CartItemOut, status_code=201)
 async def add_to_cart(body: CartItemAdd, current_user=Depends(get_current_user)):
     db = get_db()
-    product = await db.products.find_one({"_id": ObjectId(body.product_id)})
+    product = await db.products.find_one({"_id": _to_object_id(body.product_id)})
     if not product:
         raise HTTPException(404, "Product not found")
     if product["stock"] < body.quantity:
@@ -107,17 +115,18 @@ async def add_to_cart(body: CartItemAdd, current_user=Depends(get_current_user))
 @router.put("/{item_id}", response_model=CartItemOut)
 async def update_cart_item(item_id: str, body: CartItemUpdate, current_user=Depends(get_current_user)):
     db = get_db()
-    item = await db.cart.find_one({"_id": ObjectId(item_id), "user_id": str(current_user["_id"])})
+    oid = _to_object_id(item_id)
+    item = await db.cart.find_one({"_id": oid, "user_id": str(current_user["_id"])})
     if not item:
         raise HTTPException(404, "Cart item not found")
 
-    product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+    product = await db.products.find_one({"_id": _to_object_id(item["product_id"])})
     if not product:
         raise HTTPException(404, "Product no longer available")
     if product["stock"] < body.quantity:
         raise HTTPException(400, f"Only {product['stock']} in stock")
 
-    await db.cart.update_one({"_id": ObjectId(item_id)}, {"$set": {"quantity": body.quantity}})
+    await db.cart.update_one({"_id": oid}, {"$set": {"quantity": body.quantity}})
     subtotal = product["price"] * body.quantity
     return CartItemOut(
         id=item_id,
@@ -134,7 +143,7 @@ async def update_cart_item(item_id: str, body: CartItemUpdate, current_user=Depe
 @router.delete("/{item_id}", status_code=204)
 async def remove_cart_item(item_id: str, current_user=Depends(get_current_user)):
     db = get_db()
-    result = await db.cart.delete_one({"_id": ObjectId(item_id), "user_id": str(current_user["_id"])})
+    result = await db.cart.delete_one({"_id": _to_object_id(item_id), "user_id": str(current_user["_id"])})
     if result.deleted_count == 0:
         raise HTTPException(404, "Cart item not found")
 

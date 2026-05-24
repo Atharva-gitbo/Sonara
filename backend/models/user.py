@@ -1,3 +1,4 @@
+# Author: Kunj Vania
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Literal
 from datetime import datetime

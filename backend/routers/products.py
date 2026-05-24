@@ -1,13 +1,22 @@
+# Author: Kunj Vania
 from fastapi import APIRouter, HTTPException, Depends, Query
-from bson import ObjectId
+from bson import ObjectId, errors as bson_errors
 from datetime import datetime
 from typing import Optional
+import re
 
 from database import get_db
 from auth import get_current_user, require_admin
 from models.product import ProductCreate, ProductUpdate, ProductOut
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+
+
+def _to_object_id(id_str: str) -> ObjectId:
+    try:
+        return ObjectId(id_str)
+    except (bson_errors.InvalidId, TypeError):
+        raise HTTPException(400, "Invalid ID format")
 
 
 def _product_out(p: dict) -> ProductOut:
@@ -31,12 +40,13 @@ async def list_products(
     db = get_db()
     query: dict = {}
     if search:
+        safe_search = re.escape(search)
         query["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}},
+            {"name": {"$regex": safe_search, "$options": "i"}},
+            {"description": {"$regex": safe_search, "$options": "i"}},
         ]
     if category:
-        query["category"] = {"$regex": f"^{category}$", "$options": "i"}
+        query["category"] = {"$regex": f"^{re.escape(category)}$", "$options": "i"}
 
     products = await db.products.find(query).sort("created_at", -1).to_list(None)
     return [_product_out(p) for p in products]
@@ -52,7 +62,7 @@ async def get_categories():
 @router.get("/{product_id}", response_model=ProductOut)
 async def get_product(product_id: str):
     db = get_db()
-    product = await db.products.find_one({"_id": ObjectId(product_id)})
+    product = await db.products.find_one({"_id": _to_object_id(product_id)})
     if not product:
         raise HTTPException(404, "Product not found")
     return _product_out(product)
@@ -73,17 +83,18 @@ async def update_product(product_id: str, body: ProductUpdate, admin=Depends(req
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
         raise HTTPException(400, "Nothing to update")
-    result = await db.products.update_one({"_id": ObjectId(product_id)}, {"$set": updates})
+    oid = _to_object_id(product_id)
+    result = await db.products.update_one({"_id": oid}, {"$set": updates})
     if result.matched_count == 0:
         raise HTTPException(404, "Product not found")
-    updated = await db.products.find_one({"_id": ObjectId(product_id)})
+    updated = await db.products.find_one({"_id": oid})
     return _product_out(updated)
 
 
 @router.delete("/{product_id}", status_code=204)
 async def delete_product(product_id: str, admin=Depends(require_admin)):
     db = get_db()
-    result = await db.products.delete_one({"_id": ObjectId(product_id)})
+    result = await db.products.delete_one({"_id": _to_object_id(product_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "Product not found")
     await db.cart.delete_many({"product_id": product_id})

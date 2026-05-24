@@ -1,5 +1,6 @@
+# Author: Kunj Vania
 from fastapi import APIRouter, HTTPException, Depends
-from bson import ObjectId
+from bson import ObjectId, errors as bson_errors
 from datetime import datetime
 
 from database import get_db
@@ -7,6 +8,13 @@ from auth import hash_password, verify_password, create_access_token, get_curren
 from models.user import UserRegister, UserLogin, UserUpdate, PasswordChange, UserOut, TokenResponse
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+
+def _to_object_id(id_str: str) -> ObjectId:
+    try:
+        return ObjectId(id_str)
+    except (bson_errors.InvalidId, TypeError):
+        raise HTTPException(400, "Invalid ID format")
 
 
 def _user_out(u: dict) -> UserOut:
@@ -100,7 +108,7 @@ async def delete_user(user_id: str, admin=Depends(require_admin)):
     db = get_db()
     if str(admin["_id"]) == user_id:
         raise HTTPException(400, "Cannot delete your own account")
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    result = await db.users.delete_one({"_id": _to_object_id(user_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "User not found")
     await db.cart.delete_many({"user_id": user_id})
@@ -111,7 +119,7 @@ async def set_user_role(user_id: str, role: str, admin=Depends(require_admin)):
     if role not in ("user", "admin"):
         raise HTTPException(400, "Role must be 'user' or 'admin'")
     db = get_db()
-    result = await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"role": role}})
+    result = await db.users.update_one({"_id": _to_object_id(user_id)}, {"$set": {"role": role}})
     if result.matched_count == 0:
         raise HTTPException(404, "User not found")
     return {"message": f"Role updated to {role}"}

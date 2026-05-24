@@ -1,5 +1,9 @@
+// Author: Kunj Vania
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
+const ADDED_FEEDBACK_MS = 2000
+const ERROR_FEEDBACK_MS = 2500
 import api from '../api/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -18,12 +22,12 @@ export default function ProductCard({ product, onEdit, onDelete, isAdmin }) {
     try {
       await api.post('/cart', { product_id: product.id, quantity: 1 })
       setAdded(true)
-      setTimeout(() => setAdded(false), 2000)
+      setTimeout(() => setAdded(false), ADDED_FEEDBACK_MS)
     } catch (err) {
       const detail = err.response?.data?.detail
       if (!detail) return
       setErrMsg(detail)
-      setTimeout(() => setErrMsg(''), 2500)
+      setTimeout(() => setErrMsg(''), ERROR_FEEDBACK_MS)
     } finally {
       setAdding(false)
     }

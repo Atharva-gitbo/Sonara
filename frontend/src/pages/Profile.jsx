@@ -1,5 +1,9 @@
+// Author: Kunj Vania
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+
+const FLASH_DURATION_MS = 3500
+const MIN_PASSWORD_LENGTH = 6
 import api from '../api/api'
 
 function Field({ label, children }) {
@@ -24,7 +28,7 @@ export default function Profile() {
   const [profileMsg, setProfileMsg] = useState({ type: '', text: '' })
   const [pwMsg, setPwMsg] = useState({ type: '', text: '' })
 
-  const flash = (setter, type, text, ms = 3500) => {
+  const flash = (setter, type, text, ms = FLASH_DURATION_MS) => {
     setter({ type, text })
     setTimeout(() => setter({ type: '', text: '' }), ms)
   }
@@ -44,7 +48,7 @@ export default function Profile() {
   const handlePwSave = async (e) => {
     e.preventDefault()
     if (pw.new_password !== pw.confirm) { flash(setPwMsg, 'error', 'Passwords do not match'); return }
-    if (pw.new_password.length < 6) { flash(setPwMsg, 'error', 'Password must be at least 6 characters'); return }
+    if (pw.new_password.length < MIN_PASSWORD_LENGTH) { flash(setPwMsg, 'error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters`); return }
     try {
       await api.put('/users/me/password', { current_password: pw.current_password, new_password: pw.new_password })
       setPw({ current_password: '', new_password: '', confirm: '' })

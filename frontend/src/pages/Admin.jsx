@@ -1,7 +1,9 @@
+// Author: Kunj Vania
 import { useState, useEffect } from 'react'
 import api from '../api/api'
 
 const TABS = ['Products', 'Users', 'Carts']
+const FLASH_DURATION_MS = 3000
 
 export default function Admin() {
   const [tab, setTab] = useState('Products')
@@ -12,7 +14,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), FLASH_DURATION_MS) }
 
   useEffect(() => { if (tab === 'Products') fetchProducts() }, [tab])
   useEffect(() => { if (tab === 'Users') fetchUsers() }, [tab])

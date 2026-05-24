@@ -1,4 +1,7 @@
+// Author: Kunj Vania
 import { useState, useEffect, useCallback } from 'react'
+
+const SEARCH_DEBOUNCE_MS = 300
 import api from '../api/api'
 import ProductCard from '../components/ProductCard'
 
@@ -29,7 +32,7 @@ export default function Home() {
   }, [search, category])
 
   useEffect(() => {
-    const timer = setTimeout(fetchProducts, 300)
+    const timer = setTimeout(fetchProducts, SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [fetchProducts])
 
